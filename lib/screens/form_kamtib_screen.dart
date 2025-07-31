@@ -1,0 +1,417 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
+class FormKamtibScreen extends StatefulWidget {
+  const FormKamtibScreen({super.key});
+
+  @override
+  State<FormKamtibScreen> createState() => _FormKamtibScreenState();
+}
+
+class _FormKamtibScreenState extends State<FormKamtibScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController petugas1Controller = TextEditingController();
+  final TextEditingController petugas2Controller = TextEditingController();
+  DateTime tanggal = DateTime.now();
+
+  final List<String> kondisiOptions = ['BAIK', 'RR', 'RB'];
+
+  final List<String> kelengkapanPetugasList = [
+    'Alat Pelindung Diri',
+    '- Rompi Keselamatan',
+    '- Sepatu Safety',
+    '- Sabuk, pentungan dll',
+    'Jas Hujan'
+  ];
+
+  final List<String> kelengkapanSaranaList = [
+    'Rubber Cone',
+    'Bendera Merah/Tongkat',
+    'Handy Talky'
+  ];
+
+  final Map<String, Map<String, dynamic>> kelengkapanPetugas = {};
+  final Map<String, Map<String, dynamic>> kelengkapanSarana = {};
+  final TextEditingController nopolController = TextEditingController();
+  final TextEditingController identitasKendaraanController = TextEditingController();
+  final List<String> masaBerlakuList = [
+    'STNK',
+    'SIM Operator 1',
+    'SIM Operator 2',
+    'Service Terakhir',
+    'BBM',
+  ];
+  late final Map<String, TextEditingController> masaBerlakuMap;
+
+  @override
+  void initState() {
+    super.initState();
+    masaBerlakuMap = {for (var k in masaBerlakuList) k: TextEditingController()};
+    for (var item in kelengkapanPetugasList) {
+      kelengkapanPetugas[item] = {
+        'ada': false,
+        'jumlah': TextEditingController(),
+        'kondisi': 'BAIK'
+      };
+    }
+    for (var item in kelengkapanSaranaList) {
+      kelengkapanSarana[item] = {
+        'ada': false,
+        'jumlah': TextEditingController(),
+        'kondisi': 'BAIK'
+      };
+    }
+  }
+
+  @override
+  void dispose() {
+    petugas1Controller.dispose();
+    petugas2Controller.dispose();
+    nopolController.dispose();
+    identitasKendaraanController.dispose();
+    for (var c in masaBerlakuMap.values) {
+      c.dispose();
+    }
+    for (var item in kelengkapanPetugas.values) {
+      item['jumlah'].dispose();
+    }
+    for (var item in kelengkapanSarana.values) {
+      item['jumlah'].dispose();
+    }
+    super.dispose();
+  }
+
+  Widget buildChecklist(String title, Map<String, Map<String, dynamic>> dataMap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        ...dataMap.keys.map((item) => Row(
+          children: [
+            Checkbox(
+              value: dataMap[item]!['ada'] as bool,
+              onChanged: (val) => setState(() => dataMap[item]!['ada'] = val ?? false),
+            ),
+            Expanded(child: Text(item)),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 60,
+              child: TextField(
+                controller: dataMap[item]!['jumlah'] as TextEditingController,
+                decoration: const InputDecoration(labelText: 'Jml', isDense: true),
+              ),
+            ),
+            const SizedBox(width: 8),
+            DropdownButton<String>(
+              value: dataMap[item]!['kondisi'] as String,
+              items: kondisiOptions.map((k) => DropdownMenuItem(value: k, child: Text(k))).toList(),
+              onChanged: (val) => setState(() => dataMap[item]!['kondisi'] = val!),
+            ),
+          ],
+        )),
+        const SizedBox(height: 12)
+      ],
+    );
+  }
+
+  Widget buildMasaBerlakuFields() {
+    return Column(
+      children: masaBerlakuList.map((key) {
+        if (key == 'BBM') {
+          return TextFormField(
+            controller: masaBerlakuMap[key],
+            decoration: InputDecoration(labelText: 'Status BBM'),
+          );
+        } else {
+          return GestureDetector(
+            onTap: () async {
+              DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: DateTime.tryParse(masaBerlakuMap[key]?.text ?? '') ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+              );
+              if (picked != null) {
+                setState(() {
+                  masaBerlakuMap[key]?.text =
+                      "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                });
+              }
+            },
+            child: AbsorbPointer(
+              child: TextFormField(
+                controller: masaBerlakuMap[key],
+                decoration: InputDecoration(
+                  labelText: 'Masa Berlaku $key',
+                  suffixIcon: const Icon(Icons.calendar_today),
+                ),
+                validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+              ),
+            ),
+          );
+        }
+      }).toList(),
+    );
+  }
+
+  void generatePdf() async {
+    final pdf = pw.Document();
+    final font = await PdfGoogleFonts.nunitoRegular();
+    final hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    final hari = hariList[tanggal.weekday % 7];
+    final logoBytes = await rootBundle.load('assets/logo_jjc.png');
+    final logo = pw.MemoryImage(logoBytes.buffer.asUint8List());
+
+    pw.Widget buildTableSection(String sectionTitle, Map<String, Map<String, dynamic>> dataMap) {
+      int idx = 1;
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Container(
+            color: PdfColors.grey400,
+            padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            child: pw.Text(sectionTitle, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 11)),
+          ),
+          pw.Table(
+            border: pw.TableBorder.all(),
+            columnWidths: {
+              0: const pw.FixedColumnWidth(18), // No
+              1: const pw.FlexColumnWidth(3),   // Uraian
+              2: const pw.FixedColumnWidth(30), // Ada
+              3: const pw.FixedColumnWidth(30), // Tidak
+              4: const pw.FixedColumnWidth(35), // Jumlah
+              5: const pw.FixedColumnWidth(35), // Baik
+              6: const pw.FixedColumnWidth(35), // RR
+              7: const pw.FixedColumnWidth(35), // RB
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                children: [
+                  pw.Center(child: pw.Text('NO', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 8))),
+                  pw.Center(child: pw.Text('URAIAN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 8))),
+                  pw.Center(child: pw.Text('ADA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 8))),
+                  pw.Center(child: pw.Text('TIDAK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 8))),
+                  pw.Center(child: pw.Text('JUMLAH', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 8))),
+                  pw.Center(child: pw.Text('BAIK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 8))),
+                  pw.Center(child: pw.Text('RR', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 8))),
+                  pw.Center(child: pw.Text('RB', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 8))),
+                ],
+              ),
+              ...dataMap.entries.map((entry) {
+                final no = idx++;
+                final ada = entry.value['ada'] == true;
+                final kondisi = entry.value['kondisi'] ?? '';
+                return pw.TableRow(
+                  children: [
+                    pw.Center(child: pw.Text(no.toString(), style: pw.TextStyle(font: font, fontSize: 8))),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 2),
+                      child: pw.Text(entry.key, style: pw.TextStyle(font: font, fontSize: 8)),
+                    ),
+                    pw.Center(child: ada ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: !ada ? pw.Text('✗', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: (entry.value['jumlah'] as TextEditingController).text.isNotEmpty ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: kondisi == 'BAIK' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: kondisi == 'RR' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: kondisi == 'RB' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                  ],
+                );
+              }).toList(),
+            ],
+          ),
+        ],
+      );
+    }
+
+    pdf.addPage(
+      pw.Page(
+        margin: const pw.EdgeInsets.all(16),
+        build: (context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // HEADER
+            pw.Row(
+              children: [
+                pw.Image(logo, width: 60),
+                pw.SizedBox(width: 10),
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('PT JASAMARGA JALANLAYANG CIKAMPEK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 13)),
+                      pw.SizedBox(height: 2),
+                      pw.Text('INSPEKSI PERIODIK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 11)),
+                      pw.Text('KENDARAAN LAYANAN OPERASI', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 11)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 8),
+            pw.Row(
+              children: [
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('HARI      : $hari', style: pw.TextStyle(font: font, fontSize: 9)),
+                      pw.Text('TANGGAL   : ${tanggal.toLocal().toString().split(' ')[0]}', style: pw.TextStyle(font: font, fontSize: 9)),
+                    ],
+                  ),
+                ),
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('UNIT      : KAMTIB', style: pw.TextStyle(font: font, fontSize: 9)),
+                      pw.Text('NO. POLISI: ${nopolController.text}', style: pw.TextStyle(font: font, fontSize: 9)),
+                      pw.Text('IDENTITAS KENDARAAN: ${identitasKendaraanController.text}', style: pw.TextStyle(font: font, fontSize: 9)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 8),
+            buildTableSection('KELENGKAPAN PETUGAS', kelengkapanPetugas),
+            pw.SizedBox(height: 8),
+            buildTableSection('KELENGKAPAN SARANA', kelengkapanSarana),
+            pw.SizedBox(height: 12),
+            pw.Text('Masa Berlaku', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 10)),
+            pw.Table(
+              border: pw.TableBorder.all(),
+              children: [
+                pw.TableRow(
+                  children: masaBerlakuList.map((k) => pw.Padding(
+                    padding: const pw.EdgeInsets.all(4),
+                    child: pw.Text(k, style: pw.TextStyle(font: font, fontSize: 8)),
+                  )).toList(),
+                ),
+                pw.TableRow(
+                  children: masaBerlakuList.map((k) {
+                    // Untuk BBM, tampilkan hanya teks status BBM tanpa icon centang
+                    if (k == 'BBM') {
+                      return pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Text(
+                          masaBerlakuMap[k]?.text ?? '',
+                          style: pw.TextStyle(font: font, fontSize: 8),
+                        ),
+                      );
+                    } else {
+                      return pw.Padding(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Text(
+                          masaBerlakuMap[k]?.text ?? '',
+                          style: pw.TextStyle(font: font, fontSize: 8),
+                        ),
+                      );
+                    }
+                  }).toList(),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 24),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  children: [
+                    pw.Text('(...............................)', style: pw.TextStyle(font: font, fontSize: 11)),
+                    pw.SizedBox(height: 2),
+                    pw.Container(
+                      width: 120,
+                      alignment: pw.Alignment.center,
+                      child: pw.Text('Petugas 1', style: pw.TextStyle(font: font, fontSize: 10)),
+                    ),
+                  ],
+                ),
+                pw.Column(
+                  children: [
+                    pw.Text('(...............................)', style: pw.TextStyle(font: font, fontSize: 11)),
+                    pw.SizedBox(height: 2),
+                    pw.Container(
+                      width: 120,
+                      alignment: pw.Alignment.center,
+                      child: pw.Text('Petugas 2', style: pw.TextStyle(font: font, fontSize: 10)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 24),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+              children: [
+                pw.Text('PT JMTO', style: pw.TextStyle(font: font, fontSize: 10)),
+                pw.Text('PT JJC', style: pw.TextStyle(font: font, fontSize: 10)),
+              ],
+            ),
+            pw.SizedBox(height: 30),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+              children: [
+                pw.Text('Manager Traffic', style: pw.TextStyle(font: font, fontSize: 9)),
+                pw.Text('NIK .', style: pw.TextStyle(font: font, fontSize: 9)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    await Printing.layoutPdf(onLayout: (format) => pdf.save());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Form Kamtib')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: petugas1Controller,
+                decoration: const InputDecoration(labelText: 'Petugas 1'),
+              ),
+              TextFormField(
+                controller: petugas2Controller,
+                decoration: const InputDecoration(labelText: 'Petugas 2'),
+              ),
+              TextFormField(
+                controller: nopolController,
+                decoration: const InputDecoration(labelText: 'No. Polisi'),
+              ),
+              TextFormField(
+                controller: identitasKendaraanController,
+                decoration: const InputDecoration(labelText: 'Identitas Kendaraan'),
+              ),
+              const SizedBox(height: 16),
+              buildChecklist('Kelengkapan Petugas', kelengkapanPetugas),
+              buildChecklist('Kelengkapan Sarana', kelengkapanSarana),
+              const SizedBox(height: 16),
+              buildMasaBerlakuFields(),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    generatePdf();
+                  }
+                },
+                child: const Text('Simpan & Cetak PDF'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
