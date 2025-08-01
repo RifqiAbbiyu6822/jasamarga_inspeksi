@@ -6,6 +6,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:hive/hive.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'success_screen.dart';
 
@@ -20,9 +23,17 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController petugas1Controller = TextEditingController();
   final TextEditingController petugas2Controller = TextEditingController();
+  final TextEditingController lokasiController = TextEditingController();
   DateTime tanggal = DateTime.now();
   final TextEditingController nopolController = TextEditingController();
   final TextEditingController identitasKendaraanController = TextEditingController();
+
+  // Controller untuk foto bukti
+  final ImagePicker _picker = ImagePicker();
+  File? fotoStnk;
+  File? fotoSim1;
+  File? fotoSim2;
+  String? currentLocation;
 
   final List<String> kelengkapanPetugasList = [
     'Rompi Reflektif',
@@ -116,6 +127,7 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
     petugas2Controller.dispose();
     nopolController.dispose();
     identitasKendaraanController.dispose();
+    lokasiController.dispose();
     for (var c in masaBerlakuController.values) {
       c.dispose();
     }
@@ -125,6 +137,73 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
       }
     }
     super.dispose();
+  }
+
+  // Method untuk mendapatkan lokasi terkini
+  Future<void> getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lokasi tidak tersedia')),
+        );
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Izin lokasi ditolak')),
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Izin lokasi ditolak permanen')),
+        );
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition();
+      setState(() {
+        currentLocation = '${position.latitude}, ${position.longitude}';
+        lokasiController.text = currentLocation!;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error mendapatkan lokasi: $e')),
+      );
+    }
+  }
+
+  // Method untuk mengambil foto
+  Future<void> pickImage(String type) async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        setState(() {
+          switch (type) {
+            case 'stnk':
+              fotoStnk = File(image.path);
+              break;
+            case 'sim1':
+              fotoSim1 = File(image.path);
+              break;
+            case 'sim2':
+              fotoSim2 = File(image.path);
+              break;
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error mengambil foto: $e')),
+      );
+    }
   }
 
   Future<void> kirimKeSpreadsheet() async {
@@ -226,7 +305,7 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
                     ),
                     pw.Center(child: ada ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
                     pw.Center(child: !ada ? pw.Text('✗', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
-                    pw.Center(child: (entry.value['jumlah'] as TextEditingController).text.isNotEmpty ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: pw.Text((entry.value['jumlah'] as TextEditingController).text.isNotEmpty ? (entry.value['jumlah'] as TextEditingController).text : '-', style: pw.TextStyle(font: font, fontSize: 8))),
                     pw.Center(child: kondisi == 'BAIK' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
                     pw.Center(child: kondisi == 'RR' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
                     pw.Center(child: kondisi == 'RB' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
@@ -281,6 +360,7 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
                     pw.Text('UNIT      : DEREK', style: pw.TextStyle(font: font, fontSize: 9)),
                     pw.Text('NO. POLISI: ${nopolController.text}', style: pw.TextStyle(font: font, fontSize: 9)),
                     pw.Text('IDENTITAS KENDARAAN: ${identitasKendaraanController.text}', style: pw.TextStyle(font: font, fontSize: 9)),
+                    pw.Text('LOKASI TERKINI: ${lokasiController.text.isNotEmpty ? lokasiController.text : 'Tidak ada data'}', style: pw.TextStyle(font: font, fontSize: 9)),
                   ],
                 ),
               ),
@@ -370,6 +450,38 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
         ],
       ),
     );
+
+    // Halaman 3 - Lampiran
+    if (fotoStnk != null || fotoSim1 != null || fotoSim2 != null) {
+      pdf.addPage(
+        pw.MultiPage(
+          margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          build: (context) => [
+            pw.Text('LAMPIRAN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 16)),
+            pw.SizedBox(height: 20),
+            if (fotoStnk != null) ...[
+              pw.Text('Bukti STNK:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 12)),
+              pw.SizedBox(height: 8),
+              pw.Image(pw.MemoryImage(fotoStnk!.readAsBytesSync()), width: 200, height: 150),
+              pw.SizedBox(height: 16),
+            ],
+            if (fotoSim1 != null) ...[
+              pw.Text('Bukti SIM Operator 1:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 12)),
+              pw.SizedBox(height: 8),
+              pw.Image(pw.MemoryImage(fotoSim1!.readAsBytesSync()), width: 200, height: 150),
+              pw.SizedBox(height: 16),
+            ],
+            if (fotoSim2 != null) ...[
+              pw.Text('Bukti SIM Operator 2:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: font, fontSize: 12)),
+              pw.SizedBox(height: 8),
+              pw.Image(pw.MemoryImage(fotoSim2!.readAsBytesSync()), width: 200, height: 150),
+              pw.SizedBox(height: 16),
+            ],
+          ],
+        ),
+      );
+    }
+
     await Printing.layoutPdf(onLayout: (format) => pdf.save());
 
     // Simpan riwayat inspeksi ke Hive
@@ -526,6 +638,116 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
                 controller: identitasKendaraanController,
                 decoration: const InputDecoration(labelText: 'Identitas Kendaraan'),
                 validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+              ),
+              const SizedBox(height: 16),
+              // Lokasi Terkini
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: lokasiController,
+                      decoration: const InputDecoration(
+                        labelText: 'Lokasi Terkini',
+                        hintText: 'Klik tombol untuk mendapatkan lokasi',
+                      ),
+                      readOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () async {
+                      try {
+                        await getCurrentLocation();
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: $e')),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.my_location),
+                    tooltip: 'Dapatkan Lokasi',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Foto Bukti
+              const Text('Foto Bukti:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        try {
+                          await pickImage('stnk');
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Foto STNK'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (fotoStnk != null)
+                    const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        try {
+                          await pickImage('sim1');
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Foto SIM 1'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (fotoSim1 != null)
+                    const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        try {
+                          await pickImage('sim2');
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Foto SIM 2'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (fotoSim2 != null)
+                    const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                ],
               ),
               const SizedBox(height: 16),
               buildChecklist('Kelengkapan Petugas', kelengkapanPetugas),
