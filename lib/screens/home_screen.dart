@@ -8,81 +8,143 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: Column(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 60),
+              // Logo dengan shadow
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  'assets/logo_jjc.png',
+                  width: 180,
+                  height: 180,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Title
+              const Text(
+                'JASAMARGA INSPEKSI',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2257C1),
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Kendaraan Layanan Operasi',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+              const Spacer(),
+              // Buttons
+              _buildMainButton(
+                context: context,
+                icon: Icons.add_circle_outline,
+                text: 'Buat Form Inspeksi Baru',
+                backgroundColor: const Color(0xFF2257C1),
+                textColor: Colors.white,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const KendaraanScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildMainButton(
+                context: context,
+                icon: Icons.history,
+                text: 'Riwayat Inspeksi',
+                backgroundColor: const Color(0xFFEBEC07),
+                textColor: const Color(0xFF2257C1),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HistoryScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Spacer(flex: 2),
+              // Footer
+              Text(
+                '© ${DateTime.now().year} PT Jasamarga Jalanlayang Cikampek',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainButton({
+    required BuildContext context,
+    required IconData icon,
+    required String text,
+    required Color backgroundColor,
+    required Color textColor,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+        ),
+        onPressed: onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 40), // agar logo agak naik
-            Center(
-              child: Image.asset(
-                'assets/logo_jjc.png',
-                width: 160, // logo lebih besar
-                height: 160,
+            Icon(icon, color: textColor, size: 24),
+            const SizedBox(width: 12),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: textColor,
               ),
             ),
-            const Spacer(), // spacer bantu dorong tombol ke tengah
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2257C1),
-                      elevation: 6,
-                      shadowColor: Colors.black45,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: const Size(double.infinity, 55),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const KendaraanScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Buat Form Inspeksi Baru',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEBEC07),
-                      elevation: 6,
-                      shadowColor: Colors.black45,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      minimumSize: const Size(double.infinity, 55),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HistoryScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Riwayat Inspeksi',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(flex: 2), // dorong ke tengah bawah
           ],
         ),
       ),

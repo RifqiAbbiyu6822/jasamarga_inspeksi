@@ -178,7 +178,7 @@ class _FormAmbulanceScreenState extends State<FormAmbulanceScreen> {
     }
   }
 
-  Widget buildChecklist(String title, Map<String, Map<String, dynamic>> dataMap) {
+  Widget   buildChecklist(String title, Map<String, Map<String, dynamic>> dataMap) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
