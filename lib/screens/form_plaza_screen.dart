@@ -60,20 +60,17 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
   final Map<String, Map<String, dynamic>> kelengkapanSarana = {};
   final Map<String, Map<String, dynamic>> kelengkapanKendaraan = {};
 
-  // Tambahkan deklarasi dan inisialisasi masaBerlakuMap
-  final List<String> masaBerlakuList = [
-    'STNK',
-    'SIM Operator 1',
-    'SIM Operator 2',
-    'Service Terakhir',
-    'BBM',
-  ];
-  late final Map<String, TextEditingController> masaBerlakuMap;
+  final Map<String, TextEditingController> masaBerlakuController = {
+    'STNK': TextEditingController(),
+    'SIM Operator 1': TextEditingController(),
+    'SIM Operator 2': TextEditingController(),
+    'Service Terakhir': TextEditingController(),
+    'BBM': TextEditingController(),
+  };
 
   @override
   void initState() {
     super.initState();
-    masaBerlakuMap = {for (var k in masaBerlakuList) k: TextEditingController()};
     for (var item in kelengkapanPetugasList) {
       kelengkapanPetugas[item] = {
         'ada': false,
@@ -104,6 +101,9 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
     nopolController.dispose();
     identitasKendaraanController.dispose();
     lokasiController.dispose();
+    for (var c in masaBerlakuController.values) {
+      c.dispose();
+    }
     for (var map in [kelengkapanPetugas, kelengkapanSarana, kelengkapanKendaraan]) {
       for (var item in map.values) {
         (item['jumlah'] as TextEditingController).dispose();
@@ -270,12 +270,12 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
                       padding: const pw.EdgeInsets.symmetric(horizontal: 2),
                       child: pw.Text(entry.key, style: pw.TextStyle(font: font, fontSize: 8)),
                     ),
-                    pw.Center(child: ada ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
-                    pw.Center(child: !ada ? pw.Text('✗', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: ada ? pw.Text('●', style: pw.TextStyle(font: font, fontSize: 12, color: PdfColors.green)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: !ada ? pw.Text('●', style: pw.TextStyle(font: font, fontSize: 12, color: PdfColors.red)) : pw.SizedBox(width: 14, height: 14)),
                     pw.Center(child: pw.Text((entry.value['jumlah'] as TextEditingController).text.isNotEmpty ? (entry.value['jumlah'] as TextEditingController).text : '-', style: pw.TextStyle(font: font, fontSize: 8))),
-                    pw.Center(child: kondisi == 'BAIK' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
-                    pw.Center(child: kondisi == 'RR' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
-                    pw.Center(child: kondisi == 'RB' ? pw.Text('✔', style: pw.TextStyle(font: font, fontSize: 14)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: kondisi == 'BAIK' ? pw.Text('●', style: pw.TextStyle(font: font, fontSize: 12, color: PdfColors.green)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: kondisi == 'RR' ? pw.Text('●', style: pw.TextStyle(font: font, fontSize: 12, color: PdfColors.orange)) : pw.SizedBox(width: 14, height: 14)),
+                    pw.Center(child: kondisi == 'RB' ? pw.Text('●', style: pw.TextStyle(font: font, fontSize: 12, color: PdfColors.red)) : pw.SizedBox(width: 14, height: 14)),
                   ],
                 );
               }).toList(),
@@ -381,22 +381,22 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
             border: pw.TableBorder.all(),
             children: [
               pw.TableRow(
-                children: masaBerlakuList.map((k) => pw.Padding(
+                children: masaBerlakuController.keys.map((k) => pw.Padding(
                   padding: const pw.EdgeInsets.all(4),
                   child: pw.Text(k, style: pw.TextStyle(font: font, fontSize: 8)),
                 )).toList(),
               ),
               pw.TableRow(
-                children: masaBerlakuList.map((k) {
-                  if (k == 'BBM') {
+                children: masaBerlakuController.entries.map((entry) {
+                  if (entry.key == 'BBM') {
                     return pw.Padding(
                       padding: const pw.EdgeInsets.all(4),
-                      child: pw.Text(masaBerlakuMap[k]?.text ?? '', style: pw.TextStyle(font: font, fontSize: 8)),
+                      child: pw.Text(entry.value.text, style: pw.TextStyle(font: font, fontSize: 8)),
                     );
                   } else {
                     return pw.Padding(
                       padding: const pw.EdgeInsets.all(4),
-                      child: pw.Text(masaBerlakuMap[k]?.text ?? '', style: pw.TextStyle(font: font, fontSize: 8)),
+                      child: pw.Text(entry.value.text, style: pw.TextStyle(font: font, fontSize: 8)),
                     );
                   }
                 }).toList(),
@@ -488,10 +488,10 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
 
   Widget buildMasaBerlakuFields() {
     return Column(
-      children: masaBerlakuList.map((key) {
-        if (key == 'BBM') {
-          return TextFormField(
-            controller: masaBerlakuMap[key],
+      children: masaBerlakuController.keys.map((key) {
+                  if (key == 'BBM') {
+            return TextFormField(
+              controller: masaBerlakuController[key],
             decoration: InputDecoration(labelText: 'Status BBM'),
           );
         } else {
@@ -499,20 +499,20 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
             onTap: () async {
               DateTime? picked = await showDatePicker(
                 context: context,
-                initialDate: DateTime.tryParse(masaBerlakuMap[key]?.text ?? '') ?? DateTime.now(),
+                initialDate: DateTime.tryParse(masaBerlakuController[key]?.text ?? '') ?? DateTime.now(),
                 firstDate: DateTime(2000),
                 lastDate: DateTime(2100),
               );
               if (picked != null) {
                 setState(() {
-                  masaBerlakuMap[key]?.text =
+                  masaBerlakuController[key]?.text =
                       "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
                 });
               }
             },
             child: AbsorbPointer(
               child: TextFormField(
-                controller: masaBerlakuMap[key],
+                controller: masaBerlakuController[key],
                 decoration: InputDecoration(
                   labelText: 'Masa Berlaku $key',
                   suffixIcon: const Icon(Icons.calendar_today),
@@ -585,82 +585,117 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Foto Bukti
-              const Text('Foto Bukti:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        try {
-                          await pickImage('stnk');
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Foto STNK'),
-                    ),
+              
+              // Card Foto Bukti
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Foto Bukti',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Color(0xFF2257C1),
+                        ),
+                      ),
+                      const Divider(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: fotoStnk != null ? Colors.green : const Color(0xFFEBEC07),
+                                foregroundColor: fotoStnk != null ? Colors.white : const Color(0xFF2257C1),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                try {
+                                  await pickImage('stnk');
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: Icon(fotoStnk != null ? Icons.check_circle : Icons.camera_alt),
+                              label: Text(fotoStnk != null ? 'STNK ✓' : 'Foto STNK'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: fotoSim1 != null ? Colors.green : const Color(0xFFEBEC07),
+                                foregroundColor: fotoSim1 != null ? Colors.white : const Color(0xFF2257C1),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                try {
+                                  await pickImage('sim1');
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: Icon(fotoSim1 != null ? Icons.check_circle : Icons.camera_alt),
+                              label: Text(fotoSim1 != null ? 'SIM 1 ✓' : 'Foto SIM 1'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: fotoSim2 != null ? Colors.green : const Color(0xFFEBEC07),
+                                foregroundColor: fotoSim2 != null ? Colors.white : const Color(0xFF2257C1),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                try {
+                                  await pickImage('sim2');
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: Icon(fotoSim2 != null ? Icons.check_circle : Icons.camera_alt),
+                              label: Text(fotoSim2 != null ? 'SIM 2 ✓' : 'Foto SIM 2'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  if (fotoStnk != null)
-                    const Icon(Icons.check_circle, color: Colors.green, size: 24),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        try {
-                          await pickImage('sim1');
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Foto SIM 1'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (fotoSim1 != null)
-                    const Icon(Icons.check_circle, color: Colors.green, size: 24),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        try {
-                          await pickImage('sim2');
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Foto SIM 2'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (fotoSim2 != null)
-                    const Icon(Icons.check_circle, color: Colors.green, size: 24),
-                ],
+                ),
               ),
               const SizedBox(height: 16),
               buildChecklist('Kelengkapan Petugas', kelengkapanPetugas),
@@ -669,14 +704,33 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
               const SizedBox(height: 16),
               buildMasaBerlakuFields(),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    generatePdf();
-                  }
-                },
-                child: const Text('Cetak Laporan PDF'),
+              
+              // Tombol Cetak
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2257C1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      generatePdf();
+                    }
+                  },
+                  icon: const Icon(Icons.print, size: 24),
+                  label: const Text(
+                    'Cetak Laporan PDF',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
