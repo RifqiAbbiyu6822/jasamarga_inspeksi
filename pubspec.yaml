@@ -5,26 +5,27 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.8.1
+  sdk: '>=3.6.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  google_fonts: ^6.1.0
-  http: ^1.1.0
-  pdf: ^3.10.4
-  printing: ^5.11.0
-  intl: ^0.18.1
+  google_fonts: ^6.2.0
+  http: ^1.2.2
+  pdf: ^3.11.3
+  printing: ^5.13.5
+  intl: ^0.19.0
   syncfusion_flutter_pdf: ^24.2.9
-  shared_preferences: ^2.0.0
+  shared_preferences: ^2.3.3
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  path_provider: ^2.1.2
-  excel: ^2.1.0
-  csv: ^5.0.2
-  image_picker: ^1.0.4
+  path_provider: ^2.1.5
+  excel: ^4.0.6
+  csv: ^6.0.0
+  image_picker: ^1.1.2
   geolocator: ^10.1.0
+  open_file: ^3.5.9
 
 dev_dependencies:
   flutter_test:

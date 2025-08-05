@@ -33,16 +33,17 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
   File? fotoStnk;
   File? fotoSim1;
   File? fotoSim2;
+  File? fotoKir;
+  File? fotoService;
+  File? fotoBbm;
   String? currentLocation;
 
-  final List<String> kondisiOptions = ['BAIK', 'RR', 'RB'];
+  final List<String> kondisiOptions = ['BAIK', 'RR', 'RB', 'TIDAK ADA'];
 
   final List<String> kelengkapanPetugasList = [
-    'Alat Pelindung Diri',
-    '- Rompi Keselamatan',
-    '- Sepatu Safety',
-    '- Sabuk, pentungan dll',
-    'Jas Hujan'
+    'Rompi Keselamatan',
+    'Sepatu Safety',
+    'Sabuk, pentungan dll'
   ];
 
   final List<String> kelengkapanSaranaList = [
@@ -51,8 +52,15 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
     'Handy Talky'
   ];
 
+  final List<String> kelengkapanKendaraanList = [
+    'Rubber Cone',
+    'Bendera Merah/Tongkat',
+    'Handy Talky'
+  ];
+
   final Map<String, Map<String, dynamic>> kelengkapanPetugas = {};
   final Map<String, Map<String, dynamic>> kelengkapanSarana = {};
+  final Map<String, Map<String, dynamic>> kelengkapanKendaraan = {};
 
   final Map<String, TextEditingController> masaBerlakuController = {
     'STNK': TextEditingController(),
@@ -68,6 +76,7 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
     for (var listName in [
       {'list': kelengkapanPetugasList, 'target': kelengkapanPetugas},
       {'list': kelengkapanSaranaList, 'target': kelengkapanSarana},
+      {'list': kelengkapanKendaraanList, 'target': kelengkapanKendaraan}
     ]) {
       final list = listName['list'] as List<String>;
       final target = listName['target'] as Map<String, Map<String, dynamic>>;
@@ -75,7 +84,7 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
         target[item] = {
           'ada': false,
           'jumlah': TextEditingController(),
-          'kondisi': 'BAIK'
+          'kondisi': 'TIDAK ADA'
         };
       }
     }
@@ -91,7 +100,7 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
     for (var c in masaBerlakuController.values) {
       c.dispose();
     }
-    for (var map in [kelengkapanPetugas, kelengkapanSarana]) {
+    for (var map in [kelengkapanPetugas, kelengkapanSarana, kelengkapanKendaraan]) {
       for (var item in map.values) {
         (item['jumlah'] as TextEditingController).dispose();
       }
@@ -156,6 +165,15 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
             case 'sim2':
               fotoSim2 = File(image.path);
               break;
+            case 'kir':
+              fotoKir = File(image.path);
+              break;
+            case 'service':
+              fotoService = File(image.path);
+              break;
+            case 'bbm':
+              fotoBbm = File(image.path);
+              break;
           }
         });
       }
@@ -180,90 +198,70 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
               title,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: 16,
                 color: Color(0xFF2257C1),
               ),
             ),
             const Divider(height: 24),
-            ...dataMap.keys.map((item) => Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Theme(
-                        data: Theme.of(context).copyWith(
-                          unselectedWidgetColor: Colors.grey[600],
-                        ),
-                        child: Checkbox(
-                          value: dataMap[item]!['ada'] as bool,
-                          onChanged: (val) => setState(() => dataMap[item]!['ada'] = val ?? false),
-                          activeColor: const Color(0xFF2257C1),
-                        ),
+            ...dataMap.entries.map((entry) {
+              final item = entry.key;
+              final data = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        item,
+                        style: const TextStyle(fontSize: 14),
                       ),
-                      Expanded(
-                        child: Text(
-                          item,
-                          style: const TextStyle(fontSize: 16),
-                        ),
+                    ),
+                    Expanded(
+                      child: Checkbox(
+                        value: data['ada'] as bool,
+                        onChanged: (value) {
+                          setState(() {
+                            data['ada'] = value;
+                          });
+                        },
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const SizedBox(width: 48),
-                      Expanded(
-                        child: Container(
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey[400]!),
-                          ),
-                          child: TextField(
-                            controller: dataMap[item]!['jumlah'] as TextEditingController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Jumlah',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                            ),
-                          ),
+                    ),
+                    Expanded(
+                      child: TextFormField(
+                        controller: data['jumlah'] as TextEditingController,
+                        decoration: const InputDecoration(
+                          labelText: 'Jumlah',
+                          border: OutlineInputBorder(),
                         ),
+                        keyboardType: TextInputType.number,
                       ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey[400]!),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: data['kondisi'] as String,
+                        decoration: const InputDecoration(
+                          labelText: 'Kondisi',
+                          border: OutlineInputBorder(),
                         ),
-                        child: DropdownButton<String>(
-                          value: dataMap[item]!['kondisi'] as String,
-                          underline: const SizedBox(),
-                          items: kondisiOptions
-                              .map((k) => DropdownMenuItem(
-                                value: k,
-                                child: Text(k),
-                              ))
-                              .toList(),
-                          onChanged: (val) => setState(() => dataMap[item]!['kondisi'] = val!),
-                        ),
+                        items: kondisiOptions.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            data['kondisi'] = newValue;
+                          });
+                        },
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            )),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ],
         ),
       ),
@@ -284,61 +282,24 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
               'Masa Berlaku Dokumen',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: 16,
                 color: Color(0xFF2257C1),
               ),
             ),
             const Divider(height: 24),
-            ...masaBerlakuController.keys.map((key) {
-              if (key == 'BBM') {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: TextFormField(
-                    controller: masaBerlakuController[key],
-                    decoration: InputDecoration(
-                      labelText: 'Status BBM',
-                      prefixIcon: const Icon(Icons.local_gas_station),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+            ...masaBerlakuController.entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: TextFormField(
+                  controller: entry.value,
+                  decoration: InputDecoration(
+                    labelText: entry.key,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                );
-              } else {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: GestureDetector(
-                    onTap: () async {
-                      DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.tryParse(masaBerlakuController[key]!.text) ?? DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          masaBerlakuController[key]!.text =
-                              "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-                        });
-                      }
-                    },
-                    child: AbsorbPointer(
-                      child: TextFormField(
-                        controller: masaBerlakuController[key],
-                        decoration: InputDecoration(
-                          labelText: 'Masa Berlaku $key',
-                          prefixIcon: const Icon(Icons.calendar_today),
-                          suffixIcon: const Icon(Icons.arrow_drop_down),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
-                      ),
-                    ),
-                  ),
-                );
-              }
+                ),
+              );
             }).toList(),
           ],
         ),
@@ -347,411 +308,324 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
   }
 
   void generatePdf() async {
-    final pdf = pw.Document();
-    final font = await PdfGoogleFonts.nunitoRegular();
-    final fontBold = await PdfGoogleFonts.nunitoBold();
-    final hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    final hari = hariList[tanggal.weekday % 7];
-    final logoBytes = await rootBundle.load('assets/logo_jjc.png');
-    final logo = pw.MemoryImage(logoBytes.buffer.asUint8List());
+    try {
+      final pdf = pw.Document();
+      final font = await PdfGoogleFonts.nunitoRegular();
+      final fontBold = await PdfGoogleFonts.nunitoBold();
 
-    pw.Widget buildTableSection(String sectionTitle, Map<String, Map<String, dynamic>> dataMap) {
-      int idx = 1;
-      return pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Container(
-            color: PdfColors.grey400,
-            padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-            child: pw.Text(sectionTitle, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-          ),
-          pw.Table(
-            border: pw.TableBorder.all(width: 0.5),
-            columnWidths: {
-              0: const pw.FixedColumnWidth(25),  // No
-              1: const pw.FlexColumnWidth(3.5), // Uraian
-              2: const pw.FixedColumnWidth(35), // Ada
-              3: const pw.FixedColumnWidth(35), // Tidak
-              4: const pw.FixedColumnWidth(40), // Jumlah
-              5: const pw.FixedColumnWidth(35), // Baik
-              6: const pw.FixedColumnWidth(35), // RR
-              7: const pw.FixedColumnWidth(35), // RB
-            },
-            children: [
-              pw.TableRow(
-                decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-                children: [
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Center(child: pw.Text('NO', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9))),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Center(child: pw.Text('URAIAN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9))),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Center(child: pw.Text('ADA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9))),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Center(child: pw.Text('TIDAK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9))),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Center(child: pw.Text('JUMLAH', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9))),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Center(child: pw.Text('BAIK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9))),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Center(child: pw.Text('RR', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9))),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Center(child: pw.Text('RB', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9))),
-                  ),
-                ],
-              ),
-              ...dataMap.entries.map((entry) {
-                final no = idx++;
-                final ada = entry.value['ada'] == true;
-                final kondisi = entry.value['kondisi'] ?? '';
-                return pw.TableRow(
-                  children: [
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 4),
-                      child: pw.Center(child: pw.Text(no.toString(), style: pw.TextStyle(font: font, fontSize: 9))),
-                    ),
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 4),
-                      child: pw.Text(entry.key, style: pw.TextStyle(font: font, fontSize: 9)),
-                    ),
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 3),
-                      child: pw.Center(
-                        child: ada 
-                          ? pw.Text('●', style: pw.TextStyle(font: fontBold, fontSize: 12, color: PdfColors.green))
-                          : pw.SizedBox(width: 16, height: 16),
-                      ),
-                    ),
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 3),
-                      child: pw.Center(
-                        child: !ada 
-                          ? pw.Text('●', style: pw.TextStyle(font: fontBold, fontSize: 12, color: PdfColors.red))
-                          : pw.SizedBox(width: 16, height: 16),
-                      ),
-                    ),
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 4),
-                      child: pw.Center(
-                        child: pw.Text(
-                          (entry.value['jumlah'] as TextEditingController).text.isNotEmpty 
-                            ? (entry.value['jumlah'] as TextEditingController).text 
-                            : '-',
-                          style: pw.TextStyle(font: font, fontSize: 9),
-                        ),
-                      ),
-                    ),
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 3),
-                      child: pw.Center(
-                        child: kondisi == 'BAIK' 
-                          ? pw.Text('●', style: pw.TextStyle(font: fontBold, fontSize: 12, color: PdfColors.green))
-                          : pw.SizedBox(width: 16, height: 16),
-                      ),
-                    ),
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 3),
-                      child: pw.Center(
-                        child: kondisi == 'RR' 
-                          ? pw.Text('●', style: pw.TextStyle(font: fontBold, fontSize: 12, color: PdfColors.orange))
-                          : pw.SizedBox(width: 16, height: 16),
-                      ),
-                    ),
-                    pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 3),
-                      child: pw.Center(
-                        child: kondisi == 'RB' 
-                          ? pw.Text('●', style: pw.TextStyle(font: fontBold, fontSize: 12, color: PdfColors.red))
-                          : pw.SizedBox(width: 16, height: 16),
-                      ),
-                    ),
-                  ],
-                );
-              }),
-            ],
-          ),
-        ],
-      );
-    }
-
-    // Halaman 1
-    pdf.addPage(
-      pw.MultiPage(
-        margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-        build: (context) => [
-          // HEADER
-          pw.Row(
-            children: [
-              pw.Image(logo, width: 70),
-              pw.SizedBox(width: 16),
-              pw.Expanded(
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('PT JASAMARGA JALANLAYANG CIKAMPEK', 
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
-                    pw.SizedBox(height: 4),
-                    pw.Text('INSPEKSI PERIODIK', 
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                    pw.Text('KENDARAAN LAYANAN OPERASI', 
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          pw.SizedBox(height: 16),
-          pw.Divider(thickness: 1),
-          pw.SizedBox(height: 8),
-          pw.Row(
-            children: [
-              pw.Expanded(
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('HARI      : $hari', style: pw.TextStyle(font: font, fontSize: 10)),
-                    pw.Text('TANGGAL   : ${tanggal.toLocal().toString().split(' ')[0]}', style: pw.TextStyle(font: font, fontSize: 10)),
-                  ],
-                ),
-              ),
-              pw.Expanded(
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('UNIT      : KAMTIB', style: pw.TextStyle(font: font, fontSize: 10)),
-                    pw.Text('NO. POLISI: ${nopolController.text}', style: pw.TextStyle(font: font, fontSize: 10)),
-                    pw.Text('IDENTITAS : ${identitasKendaraanController.text}', style: pw.TextStyle(font: font, fontSize: 10)),
-                    pw.Text('LOKASI    : ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', style: pw.TextStyle(font: font, fontSize: 10)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          pw.SizedBox(height: 16),
-          buildTableSection('KELENGKAPAN PETUGAS', kelengkapanPetugas),
-          pw.SizedBox(height: 12),
-          buildTableSection('KELENGKAPAN SARANA', kelengkapanSarana),
-          pw.SizedBox(height: 60),
-          // Tanda tangan petugas dengan space lebih besar
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
-            children: [
-              pw.Column(
-                children: [
-                  pw.Container(
-                    width: 150,
-                    height: 60,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border(bottom: pw.BorderSide(width: 1)),
-                    ),
-                  ),
-                  pw.SizedBox(height: 8),
-                  pw.Text('Petugas 1', style: pw.TextStyle(font: font, fontSize: 11)),
-                  pw.Text('(${petugas1Controller.text})', style: pw.TextStyle(font: font, fontSize: 10)),
-                ],
-              ),
-              pw.Column(
-                children: [
-                  pw.Container(
-                    width: 150,
-                    height: 60,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border(bottom: pw.BorderSide(width: 1)),
-                    ),
-                  ),
-                  pw.SizedBox(height: 8),
-                  pw.Text('Petugas 2', style: pw.TextStyle(font: font, fontSize: 11)),
-                  pw.Text('(${petugas2Controller.text})', style: pw.TextStyle(font: font, fontSize: 10)),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-
-    // Halaman 2
-    pdf.addPage(
-      pw.MultiPage(
-        margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-        build: (context) => [
-          pw.Text('Masa Berlaku', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-          pw.SizedBox(height: 8),
-          pw.Table(
-            border: pw.TableBorder.all(width: 0.5),
-            columnWidths: {
-              for (int i = 0; i < masaBerlakuController.length; i++) 
-                i: const pw.FlexColumnWidth(1),
-            },
-            children: [
-              pw.TableRow(
-                decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-                children: masaBerlakuController.keys.map((k) => pw.Container(
-                  padding: const pw.EdgeInsets.all(6),
-                  child: pw.Center(
-                    child: pw.Text(k, style: pw.TextStyle(font: fontBold, fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                  ),
-                )).toList(),
-              ),
-              pw.TableRow(
-                children: masaBerlakuController.values.map((v) => pw.Container(
-                  padding: const pw.EdgeInsets.all(6),
-                  child: pw.Center(
-                    child: pw.Text(v.text.isNotEmpty ? v.text : '-', style: pw.TextStyle(font: font, fontSize: 9)),
-                  ),
-                )).toList(),
-              ),
-            ],
-          ),
-          pw.SizedBox(height: 120), // Jarak besar sebelum TTD
-          // Tanda tangan bawah dengan space lebih besar
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
-            children: [
-              pw.Column(
-                children: [
-                  pw.Text('Mengetahui,', style: pw.TextStyle(font: font, fontSize: 11)),
-                  pw.Text('PT JMTO', style: pw.TextStyle(font: fontBold, fontSize: 11, fontWeight: pw.FontWeight.bold)),
-                  pw.Container(
-                    width: 150,
-                    height: 80,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border(bottom: pw.BorderSide(width: 1)),
-                    ),
-                  ),
-                  pw.SizedBox(height: 8),
-                  pw.Text('Manager Traffic', style: pw.TextStyle(font: font, fontSize: 10)),
-                ],
-              ),
-              pw.Column(
-                children: [
-                  pw.Text('Diperiksa oleh,', style: pw.TextStyle(font: font, fontSize: 11)),
-                  pw.Text('PT JJC', style: pw.TextStyle(font: fontBold, fontSize: 11, fontWeight: pw.FontWeight.bold)),
-                  pw.Container(
-                    width: 150,
-                    height: 80,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border(bottom: pw.BorderSide(width: 1)),
-                    ),
-                  ),
-                  pw.SizedBox(height: 8),
-                  pw.Text('NIK ...................', style: pw.TextStyle(font: font, fontSize: 10)),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-
-    // Halaman 3 - Lampiran
-    if (fotoStnk != null || fotoSim1 != null || fotoSim2 != null) {
+      // Halaman 1: Header + Kelengkapan Petugas + Kelengkapan Kendaraan + Masa Berlaku Dokumen + Tanda Tangan
       pdf.addPage(
         pw.MultiPage(
           margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 40),
           build: (context) => [
-            pw.Text('LAMPIRAN FOTO', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 16)),
+            // Header
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('PT. JASAMARGA JALAN CONCESSION', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
+                    pw.Text('FORM INSPEKSI KAMTIB', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 16)),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('Tanggal: ${tanggal.day}/${tanggal.month}/${tanggal.year}', style: pw.TextStyle(font: font, fontSize: 10)),
+                    pw.Text('Lokasi: ${lokasiController.text}', style: pw.TextStyle(font: font, fontSize: 10)),
+                  ],
+                ),
+              ],
+            ),
             pw.SizedBox(height: 20),
-            if (fotoStnk != null) ...[
-              pw.Container(
-                padding: const pw.EdgeInsets.all(8),
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(width: 1, color: PdfColors.grey),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+
+            // Informasi Petugas
+            pw.Text('Petugas 1: ${petugas1Controller.text}', style: pw.TextStyle(font: font, fontSize: 10)),
+            pw.Text('Petugas 2: ${petugas2Controller.text}', style: pw.TextStyle(font: font, fontSize: 10)),
+            pw.Text('Nomor Polisi: ${nopolController.text}', style: pw.TextStyle(font: font, fontSize: 10)),
+            pw.Text('Identitas Kendaraan: ${identitasKendaraanController.text}', style: pw.TextStyle(font: font, fontSize: 10)),
+            pw.SizedBox(height: 20),
+
+            // Kelengkapan Petugas
+            pw.Text('KELENGKAPAN PETUGAS', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+            pw.SizedBox(height: 10),
+            buildTableSection(kelengkapanPetugas, font, fontBold),
+            pw.SizedBox(height: 20),
+
+            // Kelengkapan Kendaraan
+            pw.Text('KELENGKAPAN KENDARAAN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+            pw.SizedBox(height: 10),
+            buildTableSection(kelengkapanKendaraan, font, fontBold),
+            pw.SizedBox(height: 20),
+
+            // Masa Berlaku Dokumen
+            pw.Text('MASA BERLAKU DOKUMEN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+            pw.SizedBox(height: 10),
+            buildMasaBerlakuTable(font, fontBold),
+            pw.SizedBox(height: 20),
+
+            // Tanda tangan - Petugas 1 dan Petugas 2
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+              children: [
+                pw.Column(
                   children: [
-                    pw.Text('Bukti STNK:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                    pw.SizedBox(height: 8),
-                    pw.Center(
-                      child: pw.Image(pw.MemoryImage(fotoStnk!.readAsBytesSync()), width: 300, height: 200),
-                    ),
+                    pw.Text('Petugas 1:', style: pw.TextStyle(font: font, fontSize: 10)),
+                    pw.SizedBox(height: 40),
+                    pw.Text(petugas1Controller.text, style: pw.TextStyle(font: font, fontSize: 10)),
                   ],
                 ),
-              ),
-              pw.SizedBox(height: 16),
-            ],
-            if (fotoSim1 != null) ...[
-              pw.Container(
-                padding: const pw.EdgeInsets.all(8),
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(width: 1, color: PdfColors.grey),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                pw.Column(
                   children: [
-                    pw.Text('Bukti SIM Operator 1:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                    pw.SizedBox(height: 8),
-                    pw.Center(
-                      child: pw.Image(pw.MemoryImage(fotoSim1!.readAsBytesSync()), width: 300, height: 200),
-                    ),
+                    pw.Text('Petugas 2:', style: pw.TextStyle(font: font, fontSize: 10)),
+                    pw.SizedBox(height: 40),
+                    pw.Text(petugas2Controller.text, style: pw.TextStyle(font: font, fontSize: 10)),
                   ],
                 ),
-              ),
-              pw.SizedBox(height: 16),
-            ],
-            if (fotoSim2 != null) ...[
-              pw.Container(
-                padding: const pw.EdgeInsets.all(8),
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(width: 1, color: PdfColors.grey),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+              ],
+            ),
+            pw.SizedBox(height: 20),
+
+            // Tanda tangan - PT JMTO Manager Traffic dan PT JJC
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+              children: [
+                pw.Column(
                   children: [
-                    pw.Text('Bukti SIM Operator 2:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                    pw.SizedBox(height: 8),
-                    pw.Center(
-                      child: pw.Image(pw.MemoryImage(fotoSim2!.readAsBytesSync()), width: 300, height: 200),
-                    ),
+                    pw.Text('PT JMTO Manager Traffic:', style: pw.TextStyle(font: font, fontSize: 10)),
+                    pw.SizedBox(height: 40),
+                    pw.Text('', style: pw.TextStyle(font: font, fontSize: 10)),
                   ],
                 ),
-              ),
-            ],
+                pw.Column(
+                  children: [
+                    pw.Text('PT JJC:', style: pw.TextStyle(font: font, fontSize: 10)),
+                    pw.SizedBox(height: 20),
+                    pw.Text('NIK:', style: pw.TextStyle(font: font, fontSize: 10)),
+                    pw.SizedBox(height: 20),
+                    pw.Text('', style: pw.TextStyle(font: font, fontSize: 10)),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       );
+
+      // Halaman 2: Kelengkapan Sarana
+      pdf.addPage(
+        pw.MultiPage(
+          margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+          build: (context) => [
+            // Header
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('PT. JASAMARGA JALAN CONCESSION', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
+                    pw.Text('FORM INSPEKSI KAMTIB', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 16)),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('Tanggal: ${tanggal.day}/${tanggal.month}/${tanggal.year}', style: pw.TextStyle(font: font, fontSize: 10)),
+                    pw.Text('Lokasi: ${lokasiController.text}', style: pw.TextStyle(font: font, fontSize: 10)),
+                  ],
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 20),
+
+            // Kelengkapan Sarana
+            pw.Text('KELENGKAPAN SARANA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+            pw.SizedBox(height: 10),
+            buildTableSection(kelengkapanSarana, font, fontBold),
+          ],
+        ),
+      );
+
+      // Lampiran Foto (jika ada)
+      if (fotoStnk != null || fotoSim1 != null || fotoSim2 != null || fotoKir != null || 
+          fotoService != null || fotoBbm != null) {
+        
+        // Buat list foto yang ada
+        List<Map<String, dynamic>> fotoList = [];
+        if (fotoStnk != null) fotoList.add({'title': 'Bukti STNK:', 'file': fotoStnk});
+        if (fotoSim1 != null) fotoList.add({'title': 'Bukti SIM Operator 1:', 'file': fotoSim1});
+        if (fotoSim2 != null) fotoList.add({'title': 'Bukti SIM Operator 2:', 'file': fotoSim2});
+        if (fotoKir != null) fotoList.add({'title': 'Bukti KIR:', 'file': fotoKir});
+        if (fotoService != null) fotoList.add({'title': 'Bukti Service:', 'file': fotoService});
+        if (fotoBbm != null) fotoList.add({'title': 'Bukti BBM:', 'file': fotoBbm});
+
+        // Bagi foto menjadi halaman dengan maksimal 3 foto per halaman
+        for (int i = 0; i < fotoList.length; i += 3) {
+          List<Map<String, dynamic>> pageFotos = fotoList.skip(i).take(3).toList();
+          
+          pdf.addPage(
+            pw.MultiPage(
+              margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+              build: (context) => [
+                pw.Text('LAMPIRAN FOTO', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 16)),
+                pw.SizedBox(height: 20),
+                ...pageFotos.map((foto) => [
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(8),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(width: 1, color: PdfColors.grey),
+                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+                    ),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(foto['title'], style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+                        pw.SizedBox(height: 8),
+                        pw.Center(
+                          child: pw.Image(pw.MemoryImage(foto['file'].readAsBytesSync()), width: 200, height: 150),
+                        ),
+                      ],
+                    ),
+                  ),
+                  pw.SizedBox(height: 16),
+                ]).expand((element) => element).toList(),
+              ],
+            ),
+          );
+        }
+      }
+
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
+
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const SuccessScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error generating PDF: $e')),
+        );
+      }
     }
+  }
 
-    await Printing.layoutPdf(onLayout: (format) => pdf.save());
+  pw.Widget buildTableSection(Map<String, Map<String, dynamic>> dataMap, pw.Font font, pw.Font fontBold) {
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.grey),
+      children: [
+        pw.TableRow(
+          children: [
+            pw.Container(
+              padding: const pw.EdgeInsets.all(8),
+              child: pw.Text('Uraian', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8)),
+            ),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(8),
+              child: pw.Text('Ada', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
+            ),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(8),
+              child: pw.Text('Tidak', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
+            ),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(8),
+              child: pw.Text('Jumlah', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
+            ),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(8),
+              child: pw.Text('Kondisi', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8)),
+            ),
+          ],
+        ),
+        ...dataMap.entries.map((entry) {
+          final item = entry.key;
+          final data = entry.value;
+          final ada = data['ada'] as bool;
+          final jumlah = (data['jumlah'] as TextEditingController).text;
+          final kondisi = data['kondisi'] as String;
 
-    // Simpan riwayat inspeksi ke Hive
-    final box = Hive.box('inspection_history');
-    box.add({
-      'jenis': 'Kamtib',
-      'tanggal': tanggal.toIso8601String(),
-      'nopol': nopolController.text,
-      'petugas1': petugas1Controller.text,
-      'petugas2': petugas2Controller.text,
-      'kelengkapanPetugas': kelengkapanPetugas.map((k, v) => MapEntry(k, {
-        'ada': v['ada'],
-        'jumlah': v['jumlah'].text,
-        'kondisi': v['kondisi'],
-      })),
-      'kelengkapanSarana': kelengkapanSarana.map((k, v) => MapEntry(k, {
-        'ada': v['ada'],
-        'jumlah': v['jumlah'].text,
-        'kondisi': v['kondisi'],
-      })),
-    });
+          return pw.TableRow(
+            children: [
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                child: pw.Text(item, style: pw.TextStyle(font: font, fontSize: 8)),
+              ),
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                child: ada ? pw.Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const pw.BoxDecoration(
+                    color: PdfColors.black,
+                    shape: pw.BoxShape.circle,
+                  ),
+                ) : pw.SizedBox(),
+              ),
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                child: !ada ? pw.Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const pw.BoxDecoration(
+                    color: PdfColors.black,
+                    shape: pw.BoxShape.circle,
+                  ),
+                ) : pw.SizedBox(),
+              ),
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                child: pw.Text(jumlah, style: pw.TextStyle(font: font, fontSize: 6)),
+              ),
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                child: pw.Text(kondisi, style: pw.TextStyle(font: font, fontSize: 8)),
+              ),
+            ],
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  pw.Widget buildMasaBerlakuTable(pw.Font font, pw.Font fontBold) {
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.grey),
+      children: [
+        pw.TableRow(
+          children: [
+            pw.Container(
+              padding: const pw.EdgeInsets.all(8),
+              child: pw.Text('Dokumen', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 10)),
+            ),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(8),
+              child: pw.Text('Masa Berlaku', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 10)),
+            ),
+          ],
+        ),
+        ...masaBerlakuController.entries.map((entry) {
+          return pw.TableRow(
+            children: [
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                child: pw.Text(entry.key, style: pw.TextStyle(font: font, fontSize: 10)),
+              ),
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                child: pw.Text(entry.value.text, style: pw.TextStyle(font: font, fontSize: 10)),
+              ),
+            ],
+          );
+        }).toList(),
+      ],
+    );
   }
 
   @override
@@ -928,6 +802,32 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
                               label: Text(fotoStnk != null ? 'STNK ✓' : 'Foto STNK'),
                             ),
                           ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: fotoKir != null ? Colors.green : const Color(0xFFEBEC07),
+                                foregroundColor: fotoKir != null ? Colors.white : const Color(0xFF2257C1),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                try {
+                                  await pickImage('kir');
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: Icon(fotoKir != null ? Icons.check_circle : Icons.camera_alt),
+                              label: Text(fotoKir != null ? 'KIR ✓' : 'Foto KIR'),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -958,11 +858,7 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
                               label: Text(fotoSim1 != null ? 'SIM 1 ✓' : 'Foto SIM 1'),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
+                          const SizedBox(width: 8),
                           Expanded(
                             child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
@@ -990,6 +886,66 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: fotoService != null ? Colors.green : const Color(0xFFEBEC07),
+                                foregroundColor: fotoService != null ? Colors.white : const Color(0xFF2257C1),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                try {
+                                  await pickImage('service');
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: Icon(fotoService != null ? Icons.check_circle : Icons.camera_alt),
+                              label: Text(fotoService != null ? 'Service ✓' : 'Foto Service'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: fotoBbm != null ? Colors.green : const Color(0xFFEBEC07),
+                                foregroundColor: fotoBbm != null ? Colors.white : const Color(0xFF2257C1),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: () async {
+                                try {
+                                  await pickImage('bbm');
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: Icon(fotoBbm != null ? Icons.check_circle : Icons.camera_alt),
+                              label: Text(fotoBbm != null ? 'BBM ✓' : 'Foto BBM'),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -999,6 +955,7 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
               // Checklist sections
               buildChecklist('Kelengkapan Petugas', kelengkapanPetugas),
               buildChecklist('Kelengkapan Sarana', kelengkapanSarana),
+              buildChecklist('Kelengkapan Kendaraan', kelengkapanKendaraan),
               buildMasaBerlakuFields(),
               
               const SizedBox(height: 24),

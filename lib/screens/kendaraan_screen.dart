@@ -109,15 +109,15 @@ class _KendaraanScreenState extends State<KendaraanScreen> {
                 ),
               ],
             ),
-            child: Column(
+            child: const Column(
               children: [
                 Icon(
                   Icons.directions_car,
                   size: 48,
-                  color: const Color(0xFF2257C1),
+                  color: Color(0xFF2257C1),
                 ),
-                const SizedBox(height: 12),
-                const Text(
+                SizedBox(height: 12),
+                Text(
                   'Pilih jenis kendaraan yang akan diinspeksi',
                   style: TextStyle(
                     fontSize: 16,
