@@ -577,15 +577,15 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
         );
       }
 
-      // Halaman 1 - Header dan Kelengkapan
+      // Halaman 1 - Header, Kelengkapan Petugas, dan Tanda Tangan Petugas 1
       pdf.addPage(
         pw.MultiPage(
           margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          maxPages: 2,
+          maxPages: 1,
           build: (context) => [
             // Header
             pw.Container(
-              padding: const pw.EdgeInsets.all(16),
+              padding: const pw.EdgeInsets.all(12),
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(width: 2, color: PdfColors.black),
                 borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
@@ -594,22 +594,22 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
                 children: [
                   pw.Row(
                     children: [
-                      pw.Image(logo, width: 60, height: 60),
-                      pw.SizedBox(width: 20),
+                      pw.Image(logo, width: 50, height: 50),
+                      pw.SizedBox(width: 15),
                       pw.Expanded(
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
                             pw.Text('PT JASAMARGA JALAN CONCESSIONAIRE', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 16)),
-                            pw.Text('FORM INSPEKSI KENDARAAN DEREK', 
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
+                            pw.Text('FORM INSPEKSI KENDARAAN DEREK', 
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
                             pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
-                              style: pw.TextStyle(font: font, fontSize: 10)),
+                              style: pw.TextStyle(font: font, fontSize: 9)),
                             pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
-                              style: pw.TextStyle(font: font, fontSize: 10)),
+                              style: pw.TextStyle(font: font, fontSize: 9)),
                             pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
-                              style: pw.TextStyle(font: font, fontSize: 10)),
+                              style: pw.TextStyle(font: font, fontSize: 9)),
                           ],
                         ),
                       ),
@@ -618,18 +618,132 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
                 ],
               ),
             ),
-            pw.SizedBox(height: 15),
+            pw.SizedBox(height: 10),
             
             buildTableSection('KELENGKAPAN PETUGAS', kelengkapanPetugas),
-            pw.SizedBox(height: 12),
+            pw.SizedBox(height: 15),
+            
+            // Tanda tangan - Hanya Petugas 1
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.start,
+              children: [
+                pw.Column(
+                  children: [
+                    pw.Container(
+                      width: 100,
+                      height: 40,
+                      decoration: const pw.BoxDecoration(
+                        border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
+                      ),
+                    ),
+                    pw.SizedBox(height: 6),
+                    pw.Text('Petugas 1', style: pw.TextStyle(font: fontBold, fontSize: 9)),
+                    pw.Text('(${petugas1Controller.text})', style: pw.TextStyle(font: font, fontSize: 7)),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      // Halaman 2 - Kelengkapan Sarana, Kelengkapan Kendaraan, Masa Berlaku Dokumen, dan Tanda Tangan lainnya
+      pdf.addPage(
+        pw.MultiPage(
+          margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          maxPages: 2,
+          build: (context) => [
+            // Header
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(width: 2, color: PdfColors.black),
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+              ),
+              child: pw.Column(
+                children: [
+                  pw.Row(
+                    children: [
+                      pw.Image(logo, width: 50, height: 50),
+                      pw.SizedBox(width: 15),
+                      pw.Expanded(
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text('PT JASAMARGA JALAN CONCESSIONAIRE', 
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
+                            pw.Text('FORM INSPEKSI KENDARAAN DEREK', 
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+                            pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
+                              style: pw.TextStyle(font: font, fontSize: 9)),
+                            pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
+                              style: pw.TextStyle(font: font, fontSize: 9)),
+                            pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
+                              style: pw.TextStyle(font: font, fontSize: 9)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 10),
+            
             buildTableSection('KELENGKAPAN SARANA', kelengkapanSarana),
-            pw.SizedBox(height: 12),
+          ],
+        ),
+      );
+
+      // Halaman 3 - Kelengkapan Kendaraan, Masa Berlaku Dokumen, dan Tanda Tangan Manager
+      pdf.addPage(
+        pw.MultiPage(
+          margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          maxPages: 2,
+          build: (context) => [
+            // Header
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(width: 2, color: PdfColors.black),
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+              ),
+              child: pw.Column(
+                children: [
+                  pw.Row(
+                    children: [
+                      pw.Image(logo, width: 50, height: 50),
+                      pw.SizedBox(width: 15),
+                      pw.Expanded(
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text('PT JASAMARGA JALAN CONCESSIONAIRE', 
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
+                            pw.Text('FORM INSPEKSI KENDARAAN DEREK', 
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+                            pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
+                              style: pw.TextStyle(font: font, fontSize: 9)),
+                            pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
+                              style: pw.TextStyle(font: font, fontSize: 9)),
+                            pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
+                              style: pw.TextStyle(font: font, fontSize: 9)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 10),
+            
             buildTableSection('KELENGKAPAN KENDARAAN', kelengkapanKendaraan),
             pw.SizedBox(height: 15),
             
             // Masa Berlaku Dokumen
             pw.Container(
-              padding: const pw.EdgeInsets.all(12),
+              padding: const pw.EdgeInsets.all(10),
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(width: 1, color: PdfColors.grey400),
                 borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
@@ -638,8 +752,8 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Text('MASA BERLAKU DOKUMEN', 
-                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                  pw.SizedBox(height: 8),
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 11)),
+                  pw.SizedBox(height: 6),
                   pw.Table(
                     border: pw.TableBorder.all(width: 0.5),
                     columnWidths: {
@@ -671,52 +785,40 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
             ),
             pw.SizedBox(height: 15),
             
-            // Tanda tangan
+            // Tanda tangan - PT JMTO Manager Traffic dan PT.JJC
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
               children: [
                 pw.Column(
                   children: [
+                    pw.Text('Mengetahui,', style: pw.TextStyle(font: font, fontSize: 9)),
+                    pw.Text('PT JMTO', style: pw.TextStyle(font: fontBold, fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 6),
                     pw.Container(
-                      width: 120,
-                      height: 50,
+                      width: 100,
+                      height: 40,
                       decoration: const pw.BoxDecoration(
                         border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
                       ),
                     ),
-                    pw.SizedBox(height: 8),
-                    pw.Text('Petugas 1', style: pw.TextStyle(font: fontBold, fontSize: 10)),
-                    pw.Text('(${petugas1Controller.text})', style: pw.TextStyle(font: font, fontSize: 8)),
+                    pw.SizedBox(height: 6),
+                    pw.Text('Manager Traffic', style: pw.TextStyle(font: font, fontSize: 7)),
                   ],
                 ),
                 pw.Column(
                   children: [
+                    pw.Text('Mengetahui,', style: pw.TextStyle(font: font, fontSize: 9)),
+                    pw.Text('PT.JJC', style: pw.TextStyle(font: fontBold, fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 6),
                     pw.Container(
-                      width: 120,
-                      height: 50,
+                      width: 100,
+                      height: 40,
                       decoration: const pw.BoxDecoration(
                         border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
                       ),
                     ),
-                    pw.SizedBox(height: 8),
-                    pw.Text('Petugas 2', style: pw.TextStyle(font: fontBold, fontSize: 10)),
-                    pw.Text('(${petugas2Controller.text})', style: pw.TextStyle(font: font, fontSize: 8)),
-                  ],
-                ),
-                pw.Column(
-                  children: [
-                    pw.Text('Mengetahui,', style: pw.TextStyle(font: font, fontSize: 10)),
-                    pw.Text('PT JMTO', style: pw.TextStyle(font: fontBold, fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                    pw.SizedBox(height: 8),
-                    pw.Container(
-                      width: 120,
-                      height: 50,
-                      decoration: const pw.BoxDecoration(
-                        border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
-                      ),
-                    ),
-                    pw.SizedBox(height: 8),
-                    pw.Text('Manager Traffic', style: pw.TextStyle(font: font, fontSize: 8)),
+                    pw.SizedBox(height: 6),
+                    pw.Text('NIK', style: pw.TextStyle(font: font, fontSize: 7)),
                   ],
                 ),
               ],
@@ -725,7 +827,7 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
         ),
       );
 
-      // Halaman 2 - Lampiran
+      // Halaman 4 - Lampiran
       if (fotoStnk != null || fotoSim1 != null || fotoSim2 != null || fotoKir != null || 
           fotoService != null || fotoBbm != null) {
         
