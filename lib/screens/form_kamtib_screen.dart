@@ -386,6 +386,192 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
       final pdf = pw.Document();
       final font = await PdfGoogleFonts.nunitoRegular();
       final fontBold = await PdfGoogleFonts.nunitoBold();
+      final hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      final hari = hariList[tanggal.weekday % 7];
+      final logoBytes = await rootBundle.load('assets/logo_jjc.png');
+      final logo = pw.MemoryImage(logoBytes.buffer.asUint8List());
+
+      pw.Widget buildTableSection(String sectionTitle, Map<String, Map<String, dynamic>> dataMap) {
+        int idx = 1;
+        return pw.Container(
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(width: 1, color: PdfColors.grey400),
+            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+          ),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                decoration: const pw.BoxDecoration(
+                  color: PdfColors.grey300,
+                  borderRadius: pw.BorderRadius.only(
+                    topLeft: pw.Radius.circular(8),
+                    topRight: pw.Radius.circular(8),
+                  ),
+                ),
+                child: pw.Text(sectionTitle, 
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+              ),
+              pw.Table(
+                border: pw.TableBorder.all(width: 0.5),
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(25),  // No
+                  1: const pw.FlexColumnWidth(1), // Uraian - reduced from 2 to 1
+                  2: const pw.FixedColumnWidth(30), // Ada
+                  3: const pw.FixedColumnWidth(30), // Tidak
+                  4: const pw.FixedColumnWidth(35), // Jumlah
+                  5: const pw.FixedColumnWidth(30), // Baik
+                  6: const pw.FixedColumnWidth(30), // RR
+                  7: const pw.FixedColumnWidth(30), // RB
+                },
+                children: [
+                  pw.TableRow(
+                    decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                    children: [
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Center(child: pw.Text('NO', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8))),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Center(child: pw.Text('URAIAN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8))),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Center(child: pw.Text('ADA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8))),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Center(child: pw.Text('TIDAK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6))),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Center(child: pw.Text('JUMLAH', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6))),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Center(child: pw.Text('BAIK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8))),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Center(child: pw.Text('RR', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8))),
+                      ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(4),
+                        child: pw.Center(child: pw.Text('RB', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8))),
+                      ),
+                    ],
+                  ),
+                  ...dataMap.entries.map((entry) {
+                    final no = idx++;
+                    final ada = entry.value['ada'] == true;
+                    final kondisi = entry.value['kondisi'] ?? '';
+                    return pw.TableRow(
+                      children: [
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                          child: pw.Center(child: pw.Text(no.toString(), style: pw.TextStyle(font: font, fontSize: 8))),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                          child: pw.Text(entry.key, style: pw.TextStyle(font: font, fontSize: 8)),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                          child: pw.Center(
+                            child: ada 
+                              ? pw.Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: const pw.BoxDecoration(
+                                    color: PdfColors.black,
+                                    shape: pw.BoxShape.circle,
+                                  ),
+                                )
+                              : pw.SizedBox(width: 12, height: 12),
+                          ),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                          child: pw.Center(
+                            child: !ada 
+                              ? pw.Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: const pw.BoxDecoration(
+                                    color: PdfColors.black,
+                                    shape: pw.BoxShape.circle,
+                                  ),
+                                )
+                              : pw.SizedBox(width: 12, height: 12),
+                          ),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                          child: pw.Center(
+                            child: pw.Text(
+                              (entry.value['jumlah'] as TextEditingController).text.isNotEmpty 
+                                ? (entry.value['jumlah'] as TextEditingController).text 
+                                : '-',
+                              style: pw.TextStyle(font: font, fontSize: 6),
+                            ),
+                          ),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                          child: pw.Center(
+                            child: kondisi == 'BAIK' 
+                              ? pw.Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: const pw.BoxDecoration(
+                                    color: PdfColors.black,
+                                    shape: pw.BoxShape.circle,
+                                  ),
+                                )
+                              : pw.SizedBox(width: 12, height: 12),
+                          ),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                          child: pw.Center(
+                            child: kondisi == 'RR' 
+                              ? pw.Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: const pw.BoxDecoration(
+                                    color: PdfColors.black,
+                                    shape: pw.BoxShape.circle,
+                                  ),
+                                )
+                              : pw.SizedBox(width: 12, height: 12),
+                          ),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                          child: pw.Center(
+                            child: kondisi == 'RB' 
+                              ? pw.Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: const pw.BoxDecoration(
+                                    color: PdfColors.black,
+                                    shape: pw.BoxShape.circle,
+                                  ),
+                                )
+                              : pw.SizedBox(width: 12, height: 12),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ],
+          ),
+        );
+      }
 
       // Halaman 1 - Header, Kelengkapan Petugas, dan Tanda Tangan Petugas 1
       pdf.addPage(
@@ -747,90 +933,7 @@ class _FormKamtibScreenState extends State<FormKamtibScreen> {
     }
   }
 
-  pw.Widget buildTableSection(String title, Map<String, Map<String, dynamic>> dataMap) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Text(title, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-        pw.SizedBox(height: 10),
-        pw.Table(
-          border: pw.TableBorder.all(color: PdfColors.grey),
-          children: [
-            pw.TableRow(
-              children: [
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Uraian', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8)),
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Ada', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Tidak', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Jumlah', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Kondisi', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8)),
-                ),
-              ],
-            ),
-            ...dataMap.entries.map((entry) {
-              final item = entry.key;
-              final data = entry.value;
-              final ada = data['ada'] as bool;
-              final jumlah = (data['jumlah'] as TextEditingController).text;
-              final kondisi = data['kondisi'] as String;
 
-              return pw.TableRow(
-                children: [
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text(item, style: pw.TextStyle(font: font, fontSize: 8)),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: ada ? pw.Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const pw.BoxDecoration(
-                        color: PdfColors.black,
-                        shape: pw.BoxShape.circle,
-                      ),
-                    ) : pw.SizedBox(),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: !ada ? pw.Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const pw.BoxDecoration(
-                        color: PdfColors.black,
-                        shape: pw.BoxShape.circle,
-                      ),
-                    ) : pw.SizedBox(),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text(jumlah, style: pw.TextStyle(font: font, fontSize: 6)),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text(kondisi, style: pw.TextStyle(font: font, fontSize: 8)),
-                  ),
-                ],
-              );
-            }).toList(),
-          ],
-        ),
-      ],
-    );
-  }
 
   pw.Widget buildMasaBerlakuTable(pw.Font font, pw.Font fontBold) {
     return pw.Table(

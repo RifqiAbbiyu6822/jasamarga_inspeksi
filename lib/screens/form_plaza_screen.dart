@@ -41,15 +41,14 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
   final List<String> kondisiOptions = ['BAIK', 'RR', 'RB', 'TIDAK ADA'];
 
   final List<String> kelengkapanPetugasList = [
-    'Tas Ransel Petugas', 'Safety Shoes', 'Sepatu Boots', 'Lap Kanebo',
-    'Rompi Reflektif', 'Topi Reflektif', 'Jas Hujan', 'Bendera Merah/Tongkat',
-    'Kacamata Safety', 'Sarung Tangan Kulit', 'Senter Lalin', 'Masker Safety'
+    'Safety Shoes', 'Topi Reflektif', 'Jas Hujan', 'Jaket'
   ];
 
   final List<String> kelengkapanSaranaList = [
-    'Rubber Cone', 'Rambu Hati-Hati', 'Rambu Tanda Panah', 'Sekop', 'Sapu Lidi',
-    'Balok Kayu', 'Serbuk Gergaji', 'Linggis', 'Jerigen Air 20 Ltr', 'Jerigen BBM 5 Ltr',
-    'Perlak Penutup Jenazah', 'Corong Plastik', 'Webbing/Sling'
+    'Bendera merah', 'Kabel Jumper', 'Kunci Panjang', 'Dongkrak buaya', 'Jerigen Plastik',
+    'Senter biasa', 'Senter biasa', 'Kunci Tool KIt', 'Roll Meter', 'Clip board',
+    'Sarung tangan', 'Plat besi', 'Linggis', 'Kacamata safety', 'Rubbercone',
+    'Serbuk Gergaji', 'Skop', 'Sapu lidi', 'Lap kanebo', 'Apar'
   ];
 
   final List<String> kelengkapanKendaraanList = [
@@ -57,7 +56,7 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
     'Lampu Sein Depan', 'Lampu Sein Belakang', 'Lampu Rem', 'Rotator', 'Ban Depan & Velg',
     'Ban Belakang &Velg', 'Ban Cadangan & Velg', 'Radio Kunikasi / Antena',
     'Handy Talky & Charger', 'Amply / Public Address', 'Kunci Roda', 'Sirine',
-    'Rak Rambu', 'Box Besi', 'Perlengkapan P3K', 'Apar 6 Kg'
+    'Rak Rambu', 'Box Besi', 'Perlengkapan P3K'
   ];
 
   final Map<String, Map<String, dynamic>> kelengkapanPetugas = {};
@@ -393,248 +392,271 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
         final hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         final hari = hariList[tanggal.weekday % 7];
 
-      // Halaman 1 - Header, Kelengkapan Petugas, dan Tanda Tangan Petugas 1
-      pdf.addPage(
-        pw.MultiPage(
-          margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          maxPages: 1,
-          build: (context) => [
-            // Header
-            pw.Container(
-              padding: const pw.EdgeInsets.all(12),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(width: 2, color: PdfColors.black),
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-              ),
-              child: pw.Column(
-                children: [
-                  pw.Row(
-                    children: [
-                      pw.Image(logo, width: 50, height: 50),
-                      pw.SizedBox(width: 15),
-                      pw.Expanded(
-                        child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text('PT JASAMARGA JALAN CONCESSIONAIRE', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
-                            pw.Text('FORM INSPEKSI KENDARAAN PLAZA', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                            pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                            pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                            pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 10),
-            
-            buildTableSection('KELENGKAPAN PETUGAS', kelengkapanPetugas),
-            pw.SizedBox(height: 15),
-            
-            // Tanda tangan - Hanya Petugas 1
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.start,
+        pw.Widget buildTableSection(String sectionTitle, Map<String, Map<String, dynamic>> dataMap) {
+          int idx = 1;
+          return pw.Container(
+            margin: const pw.EdgeInsets.only(bottom: 8),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Column(
+                // Header section tanpa border
+                pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                  decoration: const pw.BoxDecoration(
+                    color: PdfColors.grey200,
+                    borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+                  ),
+                  child: pw.Text(sectionTitle, 
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 10)),
+                ),
+                pw.SizedBox(height: 4),
+                                 // Tabel tanpa border dan lebih compact
+                 pw.Table(
+                   border: pw.TableBorder.all(width: 0), // Menghilangkan semua border dengan width 0
+                  columnWidths: {
+                    0: const pw.FixedColumnWidth(20),  // No - diperkecil
+                    1: const pw.FlexColumnWidth(2.5), // Uraian - diperbesar untuk readability
+                    2: const pw.FixedColumnWidth(25), // Ada
+                    3: const pw.FixedColumnWidth(25), // Tidak
+                    4: const pw.FixedColumnWidth(30), // Jumlah
+                    5: const pw.FixedColumnWidth(25), // Baik
+                    6: const pw.FixedColumnWidth(25), // RR
+                    7: const pw.FixedColumnWidth(25), // RB
+                  },
                   children: [
-                    pw.Container(
-                      width: 100,
-                      height: 40,
-                      decoration: const pw.BoxDecoration(
-                        border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
-                      ),
+                    // Header row dengan background abu-abu muda
+                    pw.TableRow(
+                      decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                      children: [
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 2),
+                          child: pw.Center(child: pw.Text('NO', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 7))),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                          child: pw.Center(child: pw.Text('URAIAN', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 7))),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          child: pw.Center(child: pw.Text('ADA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 7))),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          child: pw.Center(child: pw.Text('TIDAK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6))),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          child: pw.Center(child: pw.Text('JUMLAH', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6))),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          child: pw.Center(child: pw.Text('BAIK', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 7))),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          child: pw.Center(child: pw.Text('RR', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 7))),
+                        ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          child: pw.Center(child: pw.Text('RB', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 7))),
+                        ),
+                      ],
                     ),
-                    pw.SizedBox(height: 6),
-                    pw.Text('Petugas 1', style: pw.TextStyle(font: fontBold, fontSize: 9)),
-                    pw.Text('(${petugas1Controller.text})', style: pw.TextStyle(font: font, fontSize: 7)),
+                    // Data rows dengan alternating background untuk readability
+                    ...dataMap.entries.map((entry) {
+                      final no = idx++;
+                      final ada = entry.value['ada'] == true;
+                      final kondisi = entry.value['kondisi'] ?? '';
+                      return pw.TableRow(
+                        decoration: pw.BoxDecoration(
+                          color: no % 2 == 0 ? PdfColors.grey50 : PdfColors.white,
+                        ),
+                        children: [
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                            child: pw.Center(child: pw.Text(no.toString(), style: pw.TextStyle(font: font, fontSize: 7))),
+                          ),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                            child: pw.Text(entry.key, style: pw.TextStyle(font: font, fontSize: 7)),
+                          ),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                            child: pw.Center(
+                              child: ada 
+                                ? pw.Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const pw.BoxDecoration(
+                                      color: PdfColors.black,
+                                      shape: pw.BoxShape.circle,
+                                    ),
+                                  )
+                                : pw.SizedBox(width: 8, height: 8),
+                            ),
+                          ),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                            child: pw.Center(
+                              child: !ada 
+                                ? pw.Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const pw.BoxDecoration(
+                                      color: PdfColors.black,
+                                      shape: pw.BoxShape.circle,
+                                    ),
+                                  )
+                                : pw.SizedBox(width: 8, height: 8),
+                            ),
+                          ),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                            child: pw.Center(
+                              child: pw.Text(
+                                (entry.value['jumlah'] as TextEditingController).text.isNotEmpty 
+                                  ? (entry.value['jumlah'] as TextEditingController).text 
+                                  : '-',
+                                style: pw.TextStyle(font: font, fontSize: 6),
+                              ),
+                            ),
+                          ),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                            child: pw.Center(
+                              child: kondisi == 'BAIK' 
+                                ? pw.Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const pw.BoxDecoration(
+                                      color: PdfColors.black,
+                                      shape: pw.BoxShape.circle,
+                                    ),
+                                  )
+                                : pw.SizedBox(width: 8, height: 8),
+                            ),
+                          ),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                            child: pw.Center(
+                              child: kondisi == 'RR' 
+                                ? pw.Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const pw.BoxDecoration(
+                                      color: PdfColors.black,
+                                      shape: pw.BoxShape.circle,
+                                    ),
+                                  )
+                                : pw.SizedBox(width: 8, height: 8),
+                            ),
+                          ),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                            child: pw.Center(
+                              child: kondisi == 'RB' 
+                                ? pw.Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const pw.BoxDecoration(
+                                      color: PdfColors.black,
+                                      shape: pw.BoxShape.circle,
+                                    ),
+                                  )
+                                : pw.SizedBox(width: 8, height: 8),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                   ],
                 ),
               ],
             ),
-          ],
-        ),
-      );
+          );
+        }
 
-      // Halaman 2 - Kelengkapan Sarana, Kelengkapan Kendaraan, Masa Berlaku Dokumen, dan Tanda Tangan lainnya
-      pdf.addPage(
-        pw.MultiPage(
-          margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          maxPages: 2,
+             // Halaman 1 - Header, Kelengkapan Petugas, Kelengkapan Sarana, dan Tanda Tangan Petugas 1 & 2
+       pdf.addPage(
+         pw.MultiPage(
+           margin: const pw.EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+          maxPages: 1,
           build: (context) => [
-            // Header
-            pw.Container(
-              padding: const pw.EdgeInsets.all(12),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(width: 2, color: PdfColors.black),
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-              ),
-              child: pw.Column(
-                children: [
-                  pw.Row(
-                    children: [
-                      pw.Image(logo, width: 50, height: 50),
-                      pw.SizedBox(width: 15),
-                      pw.Expanded(
-                        child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text('PT JASAMARGA JALAN CONCESSIONAIRE', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
-                            pw.Text('FORM INSPEKSI KENDARAAN PLAZA', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                            pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                            pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                            pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 10),
+                         // Header yang lebih compact
+             pw.Container(
+               padding: const pw.EdgeInsets.all(8),
+               decoration: pw.BoxDecoration(
+                 border: pw.Border.all(width: 1.5, color: PdfColors.black),
+                 borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+               ),
+               child: pw.Column(
+                 children: [
+                   pw.Row(
+                     children: [
+                                                 pw.Image(logo, width: 80, height: 80),
+                       pw.SizedBox(width: 15),
+                       pw.Expanded(
+                         child: pw.Column(
+                           crossAxisAlignment: pw.CrossAxisAlignment.start,
+                           children: [
+                             pw.Text('PT JASAMARGA JALANLAYANG CIKAMPEK', 
+                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+                             pw.Text('FORM INSPEKSI KENDARAAN PLAZA', 
+                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 10)),
+                             pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
+                               style: pw.TextStyle(font: font, fontSize: 8)),
+                             pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
+                               style: pw.TextStyle(font: font, fontSize: 8)),
+                             pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
+                               style: pw.TextStyle(font: font, fontSize: 8)),
+                           ],
+                         ),
+                       ),
+                     ],
+                   ),
+                 ],
+               ),
+             ),
+            pw.SizedBox(height: 6),
             
+            // Kelengkapan Petugas
+            buildTableSection('KELENGKAPAN PETUGAS', kelengkapanPetugas),
+            pw.SizedBox(height: 6),
+            
+            // Kelengkapan Sarana
             buildTableSection('KELENGKAPAN SARANA', kelengkapanSarana),
-          ],
-        ),
-      );
-
-      // Halaman 3 - Kelengkapan Kendaraan, Masa Berlaku Dokumen, dan Tanda Tangan Manager
-      pdf.addPage(
-        pw.MultiPage(
-          margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          maxPages: 2,
-          build: (context) => [
-            // Header
-            pw.Container(
-              padding: const pw.EdgeInsets.all(12),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(width: 2, color: PdfColors.black),
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-              ),
-              child: pw.Column(
-                children: [
-                  pw.Row(
-                    children: [
-                      pw.Image(logo, width: 50, height: 50),
-                      pw.SizedBox(width: 15),
-                      pw.Expanded(
-                        child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text('PT JASAMARGA JALAN CONCESSIONAIRE', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
-                            pw.Text('FORM INSPEKSI KENDARAAN PLAZA', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                            pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                            pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                            pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 10),
+            pw.SizedBox(height: 8),
             
-            buildTableSection('KELENGKAPAN KENDARAAN', kelengkapanKendaraan),
-            pw.SizedBox(height: 15),
-            
-            // Masa Berlaku Dokumen
-            pw.Container(
-              padding: const pw.EdgeInsets.all(10),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(width: 1, color: PdfColors.grey400),
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-              ),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('MASA BERLAKU DOKUMEN', 
-                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 11)),
-                  pw.SizedBox(height: 6),
-                  pw.Table(
-                    border: pw.TableBorder.all(width: 0.5),
-                    columnWidths: {
-                      for (int i = 0; i < masaBerlakuController.length; i++) 
-                        i: const pw.FlexColumnWidth(1),
-                    },
-                    children: [
-                      pw.TableRow(
-                        decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-                        children: masaBerlakuController.keys.map((k) => pw.Container(
-                          padding: const pw.EdgeInsets.all(6),
-                          child: pw.Center(
-                            child: pw.Text(k, style: pw.TextStyle(font: fontBold, fontSize: 8, fontWeight: pw.FontWeight.bold)),
-                          ),
-                        )).toList(),
-                      ),
-                      pw.TableRow(
-                        children: masaBerlakuController.values.map((v) => pw.Container(
-                          padding: const pw.EdgeInsets.all(6),
-                          child: pw.Center(
-                            child: pw.Text(v.text.isNotEmpty ? v.text : '-', style: pw.TextStyle(font: font, fontSize: 8)),
-                          ),
-                        )).toList(),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 15),
-            
-            // Tanda tangan - PT JMTO Manager Traffic dan PT.JJC
+            // Tanda tangan - Petugas 1 & 2 dalam satu baris
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
               children: [
                 pw.Column(
                   children: [
-                    pw.Text('Mengetahui,', style: pw.TextStyle(font: font, fontSize: 9)),
-                    pw.Text('PT JMTO', style: pw.TextStyle(font: fontBold, fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                    pw.SizedBox(height: 6),
                     pw.Container(
-                      width: 100,
-                      height: 40,
+                      width: 80,
+                      height: 30,
                       decoration: const pw.BoxDecoration(
-                        border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
+                        border: pw.Border(bottom: pw.BorderSide(width: 1)),
                       ),
                     ),
-                    pw.SizedBox(height: 6),
-                    pw.Text('Manager Traffic', style: pw.TextStyle(font: font, fontSize: 7)),
+                    pw.SizedBox(height: 4),
+                    pw.Text('Petugas 1', style: pw.TextStyle(font: fontBold, fontSize: 8)),
+                    pw.Text('(${petugas1Controller.text})', style: pw.TextStyle(font: font, fontSize: 6)),
                   ],
                 ),
                 pw.Column(
                   children: [
-                    pw.Text('Mengetahui,', style: pw.TextStyle(font: font, fontSize: 9)),
-                    pw.Text('PT.JJC', style: pw.TextStyle(font: fontBold, fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                    pw.SizedBox(height: 6),
                     pw.Container(
-                      width: 100,
-                      height: 40,
+                      width: 80,
+                      height: 30,
                       decoration: const pw.BoxDecoration(
-                        border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
+                        border: pw.Border(bottom: pw.BorderSide(width: 1)),
                       ),
                     ),
-                    pw.SizedBox(height: 6),
-                    pw.Text('NIK', style: pw.TextStyle(font: font, fontSize: 7)),
+                    pw.SizedBox(height: 4),
+                    pw.Text('Petugas 2', style: pw.TextStyle(font: fontBold, fontSize: 8)),
+                    pw.Text('(${petugas2Controller.text})', style: pw.TextStyle(font: font, fontSize: 6)),
                   ],
                 ),
               ],
@@ -643,7 +665,147 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
         ),
       );
 
-      // Halaman 4 - Lampiran
+             // Halaman 2 - Kelengkapan Kendaraan dan Masa Berlaku Dokumen (jika diperlukan)
+       if (kelengkapanKendaraan.isNotEmpty || masaBerlakuController.values.any((controller) => controller.text.isNotEmpty)) {
+         pdf.addPage(
+           pw.MultiPage(
+             margin: const pw.EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+            maxPages: 1,
+            build: (context) => [
+                             // Header yang sama
+               pw.Container(
+                 padding: const pw.EdgeInsets.all(8),
+                 decoration: pw.BoxDecoration(
+                   border: pw.Border.all(width: 1.5, color: PdfColors.black),
+                   borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                 ),
+                 child: pw.Column(
+                   children: [
+                     pw.Row(
+                       children: [
+                         pw.Image(logo, width: 80, height: 80),
+                         pw.SizedBox(width: 15),
+                         pw.Expanded(
+                           child: pw.Column(
+                             crossAxisAlignment: pw.CrossAxisAlignment.start,
+                             children: [
+                               pw.Text('PT JASAMARGA JALANLAYANG CIKAMPEK', 
+                                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
+                               pw.Text('FORM INSPEKSI KENDARAAN PLAZA', 
+                                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 10)),
+                               pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
+                                 style: pw.TextStyle(font: font, fontSize: 8)),
+                               pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
+                                 style: pw.TextStyle(font: font, fontSize: 8)),
+                               pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
+                                 style: pw.TextStyle(font: font, fontSize: 8)),
+                             ],
+                           ),
+                         ),
+                       ],
+                     ),
+                   ],
+                 ),
+               ),
+              pw.SizedBox(height: 6),
+              
+              // Kelengkapan Kendaraan
+              buildTableSection('KELENGKAPAN KENDARAAN', kelengkapanKendaraan),
+              pw.SizedBox(height: 8),
+              
+                             // Masa Berlaku Dokumen yang lebih compact
+               pw.Container(
+                 padding: const pw.EdgeInsets.all(8),
+                 decoration: pw.BoxDecoration(
+                   border: pw.Border.all(width: 0.5, color: PdfColors.grey300),
+                   borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                 ),
+                 child: pw.Column(
+                   crossAxisAlignment: pw.CrossAxisAlignment.start,
+                   children: [
+                     pw.Text('MASA BERLAKU DOKUMEN', 
+                       style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 9)),
+                     pw.SizedBox(height: 4),
+                                          pw.Table(
+                        border: pw.TableBorder.all(width: 0),
+                       columnWidths: {
+                         for (int i = 0; i < masaBerlakuController.length; i++) 
+                           i: const pw.FlexColumnWidth(1),
+                       },
+                       children: [
+                         pw.TableRow(
+                           decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                           children: masaBerlakuController.keys.map((k) => pw.Container(
+                             padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                             child: pw.Center(
+                               child: pw.Text(k, style: pw.TextStyle(font: fontBold, fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                             ),
+                           )).toList(),
+                         ),
+                         pw.TableRow(
+                           children: masaBerlakuController.values.map((v) => pw.Container(
+                             padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                             child: pw.Center(
+                               child: pw.Text(v.text.isNotEmpty ? v.text : '-', style: pw.TextStyle(font: font, fontSize: 7)),
+                             ),
+                           )).toList(),
+                         ),
+                       ],
+                     ),
+                   ],
+                 ),
+               ),
+               pw.SizedBox(height: 15),
+               
+                               // Tanda tangan PT JMTO Manager Traffic dan PT JJC - diposisikan lebih ke tengah
+                pw.Container(
+                  margin: const pw.EdgeInsets.symmetric(horizontal: 50),
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Tanda tangan PT JMTO Manager Traffic
+                      pw.Column(
+                        children: [
+                          pw.Text('Mengetahui,', style: pw.TextStyle(font: font, fontSize: 8)),
+                          pw.Text('PT JMTO', style: pw.TextStyle(font: fontBold, fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(height: 6),
+                          pw.Container(
+                            width: 100,
+                            height: 35,
+                            decoration: const pw.BoxDecoration(
+                              border: pw.Border(bottom: pw.BorderSide(width: 1)),
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text('Manager Traffic', style: pw.TextStyle(font: font, fontSize: 6)),
+                        ],
+                      ),
+                      // Tanda tangan PT JJC dengan NIK
+                      pw.Column(
+                        children: [
+                          pw.Text('Mengetahui,', style: pw.TextStyle(font: font, fontSize: 8)),
+                          pw.Text('PT.JJC', style: pw.TextStyle(font: fontBold, fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(height: 6),
+                          pw.Container(
+                            width: 100,
+                            height: 35,
+                            decoration: const pw.BoxDecoration(
+                              border: pw.Border(bottom: pw.BorderSide(width: 1)),
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text('NIK', style: pw.TextStyle(font: font, fontSize: 6)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      }
+
+      // Halaman 3 - Lampiran (jika ada foto)
       if (fotoStnk != null || fotoSim1 != null || fotoSim2 != null || fotoKir != null || 
           fotoService != null || fotoBbm != null) {
         
@@ -660,9 +822,9 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
         for (int i = 0; i < fotoList.length; i += 3) {
           List<Map<String, dynamic>> pageFotos = fotoList.skip(i).take(3).toList();
           
-          pdf.addPage(
-            pw.MultiPage(
-              margin: const pw.EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+                     pdf.addPage(
+             pw.MultiPage(
+               margin: const pw.EdgeInsets.symmetric(horizontal: 50, vertical: 20),
               build: (context) => [
                 pw.Container(
                   padding: const pw.EdgeInsets.all(12),
@@ -753,90 +915,7 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
     }
   }
 
-  pw.Widget buildTableSection(String title, Map<String, Map<String, dynamic>> dataMap) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Text(title, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-        pw.SizedBox(height: 10),
-        pw.Table(
-          border: pw.TableBorder.all(color: PdfColors.grey),
-          children: [
-            pw.TableRow(
-              children: [
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Uraian', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8)),
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Ada', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Tidak', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Jumlah', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 6)),
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text('Kondisi', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 8)),
-                ),
-              ],
-            ),
-            ...dataMap.entries.map((entry) {
-              final item = entry.key;
-              final data = entry.value;
-              final ada = data['ada'] as bool;
-              final jumlah = (data['jumlah'] as TextEditingController).text;
-              final kondisi = data['kondisi'] as String;
 
-              return pw.TableRow(
-                children: [
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text(item, style: pw.TextStyle(font: font, fontSize: 8)),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: ada ? pw.Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const pw.BoxDecoration(
-                        color: PdfColors.black,
-                        shape: pw.BoxShape.circle,
-                      ),
-                    ) : pw.SizedBox(),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: !ada ? pw.Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const pw.BoxDecoration(
-                        color: PdfColors.black,
-                        shape: pw.BoxShape.circle,
-                      ),
-                    ) : pw.SizedBox(),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text(jumlah, style: pw.TextStyle(font: font, fontSize: 6)),
-                  ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text(kondisi, style: pw.TextStyle(font: font, fontSize: 8)),
-                  ),
-                ],
-              );
-            }).toList(),
-          ],
-        ),
-      ],
-    );
-  }
 
   pw.Widget buildMasaBerlakuTable(pw.Font font, pw.Font fontBold) {
     return pw.Table(
@@ -1241,4 +1320,6 @@ class _FormPlazaScreenState extends State<FormPlazaScreen> {
     );
   }
 }
+
+
 

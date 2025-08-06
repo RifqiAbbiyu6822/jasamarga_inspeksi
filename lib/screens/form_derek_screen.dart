@@ -621,28 +621,6 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
             pw.SizedBox(height: 10),
             
             buildTableSection('KELENGKAPAN PETUGAS', kelengkapanPetugas),
-            pw.SizedBox(height: 15),
-            
-            // Tanda tangan - Hanya Petugas 1
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.start,
-              children: [
-                pw.Column(
-                  children: [
-                    pw.Container(
-                      width: 100,
-                      height: 40,
-                      decoration: const pw.BoxDecoration(
-                        border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
-                      ),
-                    ),
-                    pw.SizedBox(height: 6),
-                    pw.Text('Petugas 1', style: pw.TextStyle(font: fontBold, fontSize: 9)),
-                    pw.Text('(${petugas1Controller.text})', style: pw.TextStyle(font: font, fontSize: 7)),
-                  ],
-                ),
-              ],
-            ),
           ],
         ),
       );
@@ -691,6 +669,42 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
             pw.SizedBox(height: 10),
             
             buildTableSection('KELENGKAPAN SARANA', kelengkapanSarana),
+            pw.SizedBox(height: 20),
+            
+            // Tanda tangan - Petugas 1 dan Petugas 2
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+              children: [
+                pw.Column(
+                  children: [
+                    pw.Container(
+                      width: 120,
+                      height: 40,
+                      decoration: const pw.BoxDecoration(
+                        border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
+                      ),
+                    ),
+                    pw.SizedBox(height: 6),
+                    pw.Text('Petugas 1', style: pw.TextStyle(font: fontBold, fontSize: 9)),
+                    pw.Text('(${petugas1Controller.text})', style: pw.TextStyle(font: font, fontSize: 7)),
+                  ],
+                ),
+                pw.Column(
+                  children: [
+                    pw.Container(
+                      width: 120,
+                      height: 40,
+                      decoration: const pw.BoxDecoration(
+                        border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
+                      ),
+                    ),
+                    pw.SizedBox(height: 6),
+                    pw.Text('Petugas 2', style: pw.TextStyle(font: fontBold, fontSize: 9)),
+                    pw.Text('(${petugas2Controller.text})', style: pw.TextStyle(font: font, fontSize: 7)),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       );
@@ -701,46 +715,17 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
           margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           maxPages: 2,
           build: (context) => [
-            // Header
-            pw.Container(
-              padding: const pw.EdgeInsets.all(12),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(width: 2, color: PdfColors.black),
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-              ),
-              child: pw.Column(
-                children: [
-                  pw.Row(
-                    children: [
-                      pw.Image(logo, width: 50, height: 50),
-                      pw.SizedBox(width: 15),
-                      pw.Expanded(
-                        child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text('PT JASAMARGA JALAN CONCESSIONAIRE', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 14)),
-                            pw.Text('FORM INSPEKSI KENDARAAN DEREK', 
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: fontBold, fontSize: 12)),
-                            pw.Text('HARI: $hari | TANGGAL: ${tanggal.toLocal().toString().split(' ')[0]}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                            pw.Text('NO. POLISI: ${nopolController.text} | IDENTITAS: ${identitasKendaraanController.text}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                            pw.Text('LOKASI: ${lokasiController.text.isNotEmpty ? lokasiController.text : '-'}', 
-                              style: pw.TextStyle(font: font, fontSize: 9)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            pw.SizedBox(height: 10),
             
             buildTableSection('KELENGKAPAN KENDARAAN', kelengkapanKendaraan),
-            pw.SizedBox(height: 15),
-            
+          ],
+        ),
+      );
+
+      // Halaman 4 - Masa Berlaku Dokumen dan Tanda Tangan
+      pdf.addPage(
+        pw.MultiPage(
+          margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          build: (context) => [
             // Masa Berlaku Dokumen
             pw.Container(
               padding: const pw.EdgeInsets.all(10),
@@ -783,7 +768,7 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
                 ],
               ),
             ),
-            pw.SizedBox(height: 15),
+            pw.SizedBox(height: 20),
             
             // Tanda tangan - PT JMTO Manager Traffic dan PT.JJC
             pw.Row(
@@ -827,7 +812,7 @@ class _FormDerekScreenState extends State<FormDerekScreen> {
         ),
       );
 
-      // Halaman 4 - Lampiran
+      // Halaman 5 - Lampiran
       if (fotoStnk != null || fotoSim1 != null || fotoSim2 != null || fotoKir != null || 
           fotoService != null || fotoBbm != null) {
         
